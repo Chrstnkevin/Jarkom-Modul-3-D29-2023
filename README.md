@@ -235,6 +235,11 @@ www     IN      CNAME   granz.channel.d29.com.' > /etc/bind/jarkom/granz.channel
 
 service bind9 restart
 ````
+lalu kita coba ping dan didapatkan hasil sebagai berikut:
+
+![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/aa3180b5-ce08-4d25-ada3-650e225b326c)
+![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/6c7db0ed-e3c3-4e8f-802e-6085c46574d1)
+
 
 ### No 1-5
 > Semua CLIENT harus menggunakan konfigurasi dari DHCP Server
@@ -287,6 +292,11 @@ subnet 10.36.4.0 netmask 255.255.255.0 {
 service isc-dhcp-server restart
 service isc-dhcp-server status
 ````
+
+![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/4db21ac2-a5ea-40fd-a592-58a82999a82f)
+![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/94b172ac-43fd-4040-b531-d217af069d5c)
+![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/9324c53a-3955-40fd-9e7f-f76b46e905cb)
+
 ## Bagian 2
 Berjalannya waktu, petualang diminta untuk melakukan deployment.
 ### No 6-8
