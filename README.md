@@ -296,16 +296,115 @@ service isc-dhcp-server status
 ![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/4db21ac2-a5ea-40fd-a592-58a82999a82f)
 ![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/94b172ac-43fd-4040-b531-d217af069d5c)
 ![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/9324c53a-3955-40fd-9e7f-f76b46e905cb)
+![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/144e0173-63a8-4473-b421-811f0a6a00da)
+
 
 ## Bagian 2
 Berjalannya waktu, petualang diminta untuk melakukan deployment.
-### No 6-8
+### No 6
 > Pada masing-masing worker PHP, lakukan konfigurasi virtual host untuk website berikut dengan menggunakan php 7.3. (6)
+
+Pada masing-masing worker PHP, lakukan konfigurasi virtual host untuk website berikut dengan menggunakan php 7.3. Webserver yang digunakan adalah nginx dan sudah terkonfigurasi saat instalasi pada bagian :
+````
+mkdir /var/www/granz
+wget --no-check-certificate 'https://drive.google.com/uc?export=download&id=1ViSkRq7SmwZgdK64eRbr5Fm1EGCTPrU1' -O /var/www/granz/file.zip
+  
+unzip /var/www/granz/file.zip -d /var/www/granz
+  
+mv /var/www/granz/modul-3/* /var/www/granz
+rm -rf /var/www/granz/file.zip
+  
+touch /etc/nginx/sites-available/granz.channel.d29
+  
+echo ' server {
+  
+        listen 80;
+  
+        root /var/www/granz;
+  
+        index index.php index.html index.htm;
+        server_name _;
+  
+        location / {
+                          try_files $uri $uri/ /index.php?$query_string;
+        }
+  
+        # pass PHP scripts to FastCGI server
+        location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php7.3-fpm.sock;
+        }
+        location ~ /\.ht {
+                  deny all;
+        }
+  
+        error_log /var/log/nginx/jarkom_error.log;
+        access_log /var/log/nginx/jarkom_access.log;
+   }' > /etc/nginx/sites-available/granz.channel.d29
+  
+  ln -s /etc/nginx/sites-available/granz.channel.d29 /etc/nginx/sites-enabled
+  rm -rf /etc/nginx/sites-enabled/default
+  
+  service php7.3-fpm start
+  service php7.3-fpm restart
+  service nginx restart
+  nginx -t
+````
+lalu jalankan `lynx localhost` dan didapatkan hasil
+![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/cf7592d2-cc9c-4c43-a52b-70c592db3a8f)
+
+### No 7
 > Kepala suku dari Bredt Region memberikan resource server sebagai berikut:
 > - Lawine, 4GB, 2vCPU, dan 80 GB SSD.
 > - Linie, 2GB, 2vCPU, dan 50 GB SSD.
 > - Lugner 1GB, 1vCPU, dan 25 GB SSD.
 > aturlah agar Eisen dapat bekerja dengan maksimal, lalu lakukan testing dengan 1000 request dan 100 request/second. (7)
+
+konfigurasi load balancer dengan keadaan tersebut
+````
+No 7
+
+echo '
+upstream backend  {
+        server 10.36.3.3 weight=640; #IP Lawine
+        server 10.36.3.2 weight=200; #IP Linie
+        server 10.36.3.1 weight=25; #IP Lugner
+}
+
+server {
+        listen 80;
+        server_name granz.channel.d29.com www.granz.channel.d29.com;
+
+        location / {
+                proxy_pass http://backend;
+                proxy_set_header    X-Real-IP $remote_addr;
+                proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header    Host $http_host;
+
+        }
+        error_log /var/log/nginx/lb_error.log;
+        access_log /var/log/nginx/lb_access.log;
+
+}' > /etc/nginx/sites-available/lb-php
+
+ln -s /etc/nginx/sites-available/lb-php /etc/nginx/sites-enabled
+rm /etc/nginx/sites-enabled/default
+service nginx restart
+
+ab -V
+
+mkdir /root/benchmark
+cd /root/benchmark
+
+
+
+ab -n 1000 -c 100 -g out.data http://granz.channel.d29.com/
+````
+
+maka didapatkan output
+![image](https://github.com/Chrstnkevin/Jarkom-Modul-3-D29-2023/assets/97864068/a2587af0-f7f1-4d2c-adaf-cf2ca8b36516)
+
+### No 8
 > Karena diminta untuk menuliskan grimoire, buatlah analisis hasil testing dengan 200 request dan 10 request/second masing-masing algoritma Load Balancer dengan ketentuan sebagai berikut:
 > - Nama Algoritma Load Balancer
 > - Report hasil testing pada Apache Benchmark
