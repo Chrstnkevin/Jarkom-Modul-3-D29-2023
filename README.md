@@ -167,30 +167,126 @@ auto eth0
 iface eth0 inet dhcp
 ````
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## Bagian 1
+# Bagian 1
 Karena masih banyak spell yang harus dikumpulkan, bantulah para petualang untuk memenuhi kriteria berikut.:
-### No 1
-> Semua CLIENT harus menggunakan konfigurasi dari DHCP Server.
-### No 2-5
+### No 0
+> Setelah mengalahkan Demon King, perjalanan berlanjut. Kali ini, kalian diminta untuk melakukan register domain berupa riegel.canyon.yyy.com untuk worker Laravel dan granz.channel.yyy.com untuk worker PHP (0) mengarah pada worker yang memiliki IP [prefix IP].x.1.
+
+Atur topologi sesuai dengan peta yang telah disediakan. Lakukan instalasi dan pengaturan pada setiap node. Pastikan juga untuk menyiapkan **DNS server** dengan cara berikut:
+````
+No 1
+
+echo 'zone "riegel.canyon.d29.com" {
+        type master;
+        file "/etc/bind/jarkom/riegel.canyon.d29.com";
+};
+
+zone "granz.channel.d29.com" {
+        type master;
+        file "/etc/bind/jarkom/granz.channel.d29.com";
+};' > /etc/bind/named.conf.local
+
+echo '
+options {
+        directory "/var/cache/bind";
+        forwarders {
+                192.168.122.1;
+        };
+        allow-query{any;};
+        auth-nxdomain no;       # conform to RFC1035
+        listen-on-v6 { any; };
+};' > /etc/bind/named.conf.options
+
+mkdir -p /etc/bind/jarkom
+cp /etc/bind/db.local /etc/bind/jarkom/granz.channel.d29.com
+cp /etc/bind/db.local /etc/bind/jarkom/riegel.canyon.d29.com
+
+echo '
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     riegel.canyon.d29.com. root.riegel.canyon.d29.com. (
+                        2023111401      ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      riegel.canyon.d29.com.
+@       IN      A       10.36.4.1	; IP Ferm
+www     IN      CNAME   riegel.canyon.d29.com.' > /etc/bind/jarkom/riegel.canyon.d29.com
+
+echo '
+;
+; BIND data file for local loopback interface
+;
+$TTL    604800
+@       IN      SOA     granz.channel.d29.com. root.granz.channel.d29.com. (
+                        2023111402      ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      granz.channel.d29.com.
+@       IN      A       10.36.3.1       ; IP Lugner
+www     IN      CNAME   granz.channel.d29.com.' > /etc/bind/jarkom/granz.channel.d29.com
+
+service bind9 restart
+````
+
+### No 1-5
+> Semua CLIENT harus menggunakan konfigurasi dari DHCP Server
 > - Client yang melalui Switch3 mendapatkan range IP dari [prefix IP].3.16 - [prefix IP].3.32 dan [prefix IP].3.64 - [prefix IP].3.80 (2)
 > - Client yang melalui Switch4 mendapatkan range IP dari [prefix IP].4.12 - [prefix IP].4.20 dan [prefix IP].4.160 - [prefix IP].4.168 (3)
 > - Client mendapatkan DNS dari Heiter dan dapat terhubung dengan internet melalui DNS tersebut (4)
 > - Lama waktu DHCP server meminjamkan alamat IP kepada Client yang melalui Switch3 selama 3 menit sedangkan pada client yang melalui Switch4 selama 12 menit. Dengan waktu maksimal dialokasikan untuk peminjaman alamat IP selama 96 menit (5)
 
+jalankan konfigurasi pada **DHCP Server** seperti berikut
+````
+echo ' INTERFACES="eth0"
+' > /etc/default/isc-dhcp-server
+
+echo 'default-lease-time 600;
+max-lease-time 7200;
+
+authoritative;
+
+#eth1
+subnet 10.36.1.0 netmask 255.255.255.0 {
+}
+
+#eth2
+subnet 10.36.2.0 netmask 255.255.255.0 {
+}
+
+#eth3
+subnet 10.36.3.0 netmask 255.255.255.0 {
+    range 10.36.3.16 10.36.3.32;
+    range 10.36.3.64 10.36.3.80;
+    option routers 10.36.3.0;
+    option broadcast-address 10.36.3.255;
+    option domain-name-servers 10.36.1.2;
+    default-lease-time 180;
+    max-lease-time 5760;
+}
+
+#eth4
+subnet 10.36.4.0 netmask 255.255.255.0 {
+    range 10.36.4.12 192.185.4.20;
+    range 10.36.4.160 192.185.4.168;
+    option routers 10.36.4.0;
+    option broadcast-address 10.36.4.255;
+    option domain-name-servers 10.36.1.2;
+    default-lease-time 720;
+    max-lease-time 5760;
+}
+' > /etc/dhcp/dhcpd.conf
+
+service isc-dhcp-server restart
+service isc-dhcp-server status
+````
 ## Bagian 2
 Berjalannya waktu, petualang diminta untuk melakukan deployment.
 ### No 6-8
